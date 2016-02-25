@@ -1,9 +1,9 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # TODO:
-# Get token, limit, browser, and last time run from config file
+# Get token, limit, browser, and last time run from config file - Done!
 # Implement flags:
-#  - Set limit manually
+#  - Set limit manually - Done!
 #  - Change config settings
 #  - View all pushes rather than default only new pushes since last time
 # Check for JSON.sh and download if necessary, setting chmod
@@ -12,17 +12,75 @@
 echo
 echo Welcome to Pushbox! Now retrieving your pushes...
 echo
-echo
 
-TOKEN="TOKEN GOES HERE"
+usage(){
+        echo 
+        echo "Usage: pushbox.sh [-l] [-h]"
+        echo "-l - Set limit. Return no more than this number of pushes. (May return fewer)"
+        echo "-h - This help text."
+        echo
+        echo "Additional configuration settings can be set in:"
+        echo "./pushbox.conf"
+        echo "~/.config/pushbox.conf"
+        echo "~/.pushbox.conf"
+        echo "where later files take priority."
+        echo
+}
+
 LIMIT="30"
-BROWSER="/usr/bin/chromium"
-LASTRUN=""
 MAX_LINE_LENGTH=50
 DEFAULT_URL="https://www.pushbullet.com"
+LASTRUN=""
+
+source ./pushbox.conf
+if [ -r ~/.config/pushbox.conf ]; then
+        source ~/.config/pushbox.conf
+fi
+if [ -r ~/.pushbox.conf ]; then
+        source ~/.pushbox.conf
+fi
+
+
+
+
+
+while getopts ":hl:" opt; do
+        case $opt in
+                h)
+                        usage
+                        exit 0
+                        ;;
+                l)
+                        if ! [[ $OPTARG =~ ^[0-9]+$ ]]; then
+                                echo "Invalid argument. -l should only be used with integer input." >&2
+                                exit 1
+                        fi
+                        LIMIT="$OPTARG"
+                        echo "Returning no more than $LIMIT pushes:"
+                        echo 
+                        ;;
+                ?)
+                        echo "Flag not recognized." >&2
+                        exit 1
+                        ;;
+        esac
+done
+
+
+if [ -z "$TOKEN" ]; then
+        echo "No access token set! Please specify an access token." >&2
+        echo "Run \"pushbin.sh -h\" for more information."
+        exit 1
+fi
+if [ -z "$BROWSER" ]; then
+        echo "No default browser set! Please specify default browser." >&2
+        echo "Run \"pushbin.sh -h\" for more information."
+        exit 1
+fi
+
 
 IFS=$'\n'           # makes array only break on newline, not space
-PUSHES=($(curl   \
+PUSHES=($(curl -s  \
         -u $TOKEN: \
         --data-urlencode active="true" \
         --data-urlencode limit=$LIMIT \
@@ -30,6 +88,7 @@ PUSHES=($(curl   \
         | ./JSON.sh -b -n
         ))
 unset IFS
+
 
 for PUSHLINE in "${PUSHES[@]}"; do
         
