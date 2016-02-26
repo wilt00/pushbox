@@ -1,3 +1,2 @@
 # Pushbox
-A simple script written in (almost) pure Bash which checks recent Pushbullet messages ("pushes"). Requires Curl and dominictarr's https://github.com/dominictarr/JSON.sh
-
+A simple Pushbullet client written in Bash. Pushbox can check Pushbullet messages ("pushes") and send new ones. Requires Curl and dominictarr's https://github.com/dominictarr/JSON.sh
